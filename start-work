@@ -1,0 +1,209 @@
+#!/usr/bin/python
+
+"""
+
+ * Copyright 2018 Dexin Li. All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+
+
+This script helps parents or teachers create math problems for elementary 
+kids to exercise. Suggestions to improve this script, please send to 
+
+    dexinl@gmail.com
+
+The user is prompted with the number range, the calculation types (+-*/), 
+and the number of problems to solve.
+
+Each incorrectly answered problem can retry once. If still incorrect, it 
+is considered failed.
+
+At the end of the session, the failed problems are listed with correct answers, if any.
+The total elapsed time is displayed at the end as well.
+
+To start the script:
+    python start-work
+
+"""
+
+import random, math, time, datetime
+
+PROBLEM_RANGE = (20, 100)
+PROBLEM_COUNT = (5, 10, 20)
+
+class ArithmaticProblemGen():
+    def __init__(self, cfg):
+        """
+        cnt: the number of problems
+        typ:  'a'   - addition
+              's'   - subtraction
+              'm'   - multiplication
+              'd'   - division
+        (min_, max_)   - inputs and result are within [min, max]
+        """
+        self.problem_cnt = cfg[0]
+        self.problem_typ = cfg[1]
+        self.problem_min = cfg[2]
+        self.problem_max = cfg[3]
+
+    def test_gen(self):
+        sign_dict = {'a': 0, 's': 1, 'm': 2, 'd': 3}
+    
+        test_set = [] # (input1, input2, sign, answer)
+        count = self.problem_cnt
+        while count:
+            a = random.randrange(self.problem_min, self.problem_max)
+            b = random.randrange(self.problem_min, self.problem_max)
+            c = 0
+
+            c = sign_dict[random.choice(self.problem_typ)]
+    
+            if c == 0 or c == 1: # addition and subtraction
+                if a == b: continue
+                big = max(a, b)
+                little = min (a, b)
+                diff = big - little
+                if diff < self.problem_min : continue
+                if c == 0:
+                    p1 = (diff, little, c, diff + little)
+                    p2 = (little, diff, c, diff + little)
+                    if p1  not in test_set and p2 not in test_set:
+                        test_set.append(p1)
+                        count -= 1
+                if c == 1: # subtraction
+                    p = (big, little, c, big - little)
+                    if p not in test_set:
+                        test_set.append(p)
+                        count -= 1
+            if c == 2 or c == 3: # multiplication and division
+                big = max(a, b)
+                little = min (a, b)
+                sqrt_max = int(math.sqrt(self.problem_max))
+                if sqrt_max < little:
+                   little /= 2
+                (result, leftover) = divmod(big, little)
+                if result < self.problem_min: continue
+                if c == 2:
+                    p = (little, result, c, little * result)
+                    if p not in test_set:
+                        test_set.append(p)
+                        count -= 1
+                if c == 3:
+                    p = (result*little, little, c, result)
+                    if p not in test_set:
+                        test_set.append(p)
+                        count -= 1
+        return test_set
+    
+class ProblemConsole():
+    def __init__(self, test_set=[]):
+        self.test_set = test_set
+
+    def problemTypes(self, type_):
+        if not type_: return None
+        type_set = []
+        for i in list(type_):
+            if i in ('a', 's', 'm', 'd') and i not in type_set:
+                type_set.append(i)
+        return type_set
+
+    def configConsole(self):
+        while 1:
+            try:
+                text = raw_input("Please input problem range %s:" % str(PROBLEM_RANGE))
+                self.range_ = eval(text)
+                if self.range_ in PROBLEM_RANGE: break
+            except:
+                pass
+
+        while 1:
+            try:
+                text = raw_input("(a)ddition, (s)ubtraction, (m)ultiplication, (d)ivision \n please select from ['a'|'s'|'m'|'d'] :")
+                self.type_ = self.problemTypes(text)
+                if self.type_: break
+            except:
+                pass
+
+        while 1:
+            try:
+                text = raw_input("How many problems to solve %s:" % str(PROBLEM_COUNT))
+                self.count_ = eval(text)
+                if self.count_ in PROBLEM_COUNT : break
+            except:
+                pass
+
+        return (self.count_, self.type_, 2, self.range_)
+
+    def run(self, test_set):
+
+        sign_dict = {0: '+',
+                     1: '-',
+                     2: '*',
+                     3: '/'}
+    
+        failed = []
+        count = 1
+        for (a, b, c, d) in test_set:
+            i = 0
+            good = 0
+            while 1:
+                text = raw_input("Problem %2d :  %2d  %s %2d  = " % (count, a, sign_dict[c], b))
+                if not text: continue
+                try:
+                    if eval(text) == d: 
+                        good = 1;
+                        break
+                    i += 1
+                    if i == 2: break
+                except:
+                    pass
+
+            if not good:
+                print "This problem is failed"
+                failed.append((a, b, c, d))
+            count += 1
+    
+        if failed:
+            print "Failed problems (and correct answer): "
+            for a,b,c,d in failed:
+                print "  %2d  %s %2d  = %2d" % (a, sign_dict[c], b, d)
+            print "Score: %03d / %03d" % (len(test_set) - len(failed), len(test_set))
+        else:
+            print "Congratulations! All problems are correctly answered!"
+            print
+
+
+# specify the problem configurations
+console = ProblemConsole()
+cfg = console.configConsole()
+
+# generating problem
+generator = ArithmaticProblemGen(cfg)
+test_set = generator.test_gen()
+
+# start the exercise
+start_time = time.time()
+start_ = datetime.datetime.now()
+print
+print "Let's start at %s" % str(start_).split()[1].split('.')[0]
+console.run(test_set)
+
+# get results and stats
+end_time = time.time()
+end_ = datetime.datetime.now()
+print "Now it's %s" % str(end_).split()[1].split('.')[0]
+
+
+minutes, seconds = divmod(end_time - start_time, 60)
+print "You took %d minute(s) %d second(s) to finish the problems." % (minutes, seconds)
+

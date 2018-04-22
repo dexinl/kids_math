@@ -1,0 +1,15 @@
+
+This directory contains two applications for kids math exercise.
+The user can specify the number of problems, operation types, number range of the exercises.
+
+    start-work      : interactive keyboard
+    start-listen    : interactive voice
+
+Author: Dexin Li (dexinl@gmail.com)
+
+To use the start-listen, you need to install dependencies following this page.
+https://l34rn-p14y.blogspot.com/2014/11/python-speech-recognition-for-mac-os-x.html
+
+It uses one of the speech recognition engines from this repo:
+https://github.com/Uberi/speech_recognition.git
+
