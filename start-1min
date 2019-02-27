@@ -38,8 +38,8 @@ To start the script:
 
 import random, math, time, datetime
 
-PROBLEM_RANGE = (20, 100)
-PROBLEM_COUNT = (5, 10, 20)
+PROBLEM_RANGE = (20, 100,)
+PROBLEM_COUNT = (5, 10, 20, 50, 100)
 
 class ArithmaticProblemGen():
     def __init__(self, cfg):
@@ -51,7 +51,7 @@ class ArithmaticProblemGen():
               'd'   - division
         (min_, max_)   - inputs and result are within [min, max]
         """
-        self.problem_cnt = cfg[0]
+        #self.problem_cnt = cfg[0]
         self.problem_typ = cfg[1]
         self.problem_min = cfg[2]
         self.problem_max = cfg[3]
@@ -60,7 +60,7 @@ class ArithmaticProblemGen():
         sign_dict = {'a': 0, 's': 1, 'm': 2, 'd': 3}
     
         test_set = [] # (input1, input2, sign, answer)
-        count = self.problem_cnt
+        count = 1
         while count:
             a = random.randrange(self.problem_min, self.problem_max)
             b = random.randrange(self.problem_min, self.problem_max)
@@ -134,15 +134,7 @@ class ProblemConsole():
             except:
                 pass
 
-        while 1:
-            try:
-                text = raw_input("How many problems to solve %s:" % str(PROBLEM_COUNT))
-                self.count_ = eval(text)
-                if self.count_ in PROBLEM_COUNT : break
-            except:
-                pass
-
-        return (self.count_, self.type_, 2, self.range_)
+        return (0, self.type_, 2, self.range_)
 
     def run(self, test_set):
 
@@ -153,11 +145,12 @@ class ProblemConsole():
     
         failed = []
         count = 1
+        time_out = False
         for (a, b, c, d) in test_set:
             i = 0
             good = 0
             while 1:
-                text = raw_input("Problem %2d :  %2d  %s %2d  = " % (count, a, sign_dict[c], b))
+                text = raw_input("Problem : %2d  %s %2d  = " % (a, sign_dict[c], b))
                 if not text: continue
                 try:
                     if eval(text) == d: 
@@ -172,6 +165,9 @@ class ProblemConsole():
                 print "This problem is failed"
                 failed.append((a, b, c, d))
             count += 1
+
+            if time_out:
+                break
     
         if failed:
             print "Failed problems (and correct answer): "
@@ -179,7 +175,6 @@ class ProblemConsole():
                 print "  %2d  %s %2d  = %2d" % (a, sign_dict[c], b, d)
             print "Score: %03d / %03d" % (len(test_set) - len(failed), len(test_set))
         else:
-            print "Congratulations! All problems are correctly answered!"
             print
 
 
@@ -189,21 +184,28 @@ cfg = console.configConsole()
 
 # generating problem
 generator = ArithmaticProblemGen(cfg)
-test_set = generator.test_gen()
 
 # start the exercise
-start_time = time.time()
 start_ = datetime.datetime.now()
 print
 print "Let's start at %s" % str(start_).split()[1].split('.')[0]
-console.run(test_set)
+
+time_start = time.time()
+time_finish = time_start + 60.0
+
+count = 0
+while True:
+    time_now = time.time()
+    if time_now > time_finish:
+        print "time is up."
+        time_out = True
+        break
+    test_set = generator.test_gen() # one problem only
+    console.run(test_set)
+    count += 1
 
 # get results and stats
-end_time = time.time()
 end_ = datetime.datetime.now()
 print "Now it's %s" % str(end_).split()[1].split('.')[0]
-
-
-minutes, seconds = divmod(end_time - start_time, 60)
-print "You took %d minute(s) %d second(s) to finish the problems." % (minutes, seconds)
+print "Finished problems ", count
 
