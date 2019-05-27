@@ -1,11 +1,12 @@
 
-This directory contains two applications for kids math exercise.
+This directory contains applications for kids math exercise.
 The user can specify the number of problems, operation types, number range of the exercises.
 
     start-work      : interactive keyboard
     start-listen    : interactive voice
+    start-1min      : interactive keyboard with a time limit (1 minute) 
 
-Author: Dexin Li (dexinl@gmail.com)
+Author: Dexin Li (dexinli20@gmail.com)
 
 To use the start-listen, you need to install dependencies following this page.
 https://l34rn-p14y.blogspot.com/2014/11/python-speech-recognition-for-mac-os-x.html
